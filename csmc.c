@@ -325,15 +325,28 @@ static int run_simulation(int num_students, int num_tutors,
         Pthread_join(tthreads[i], NULL);
     }
 
+    /* a failed destroy makes the run fail, but we keep cleaning up the rest */
 destroy_wakes:
     for (int i = 0; i < nwake; i++) {
-        sem_destroy(&students[i].wake);
+        if (sem_destroy(&students[i].wake) != 0) {
+            perror("sem_destroy");
+            ret = -1;
+        }
     }
-    sem_destroy(&tutor_sem);
+    if (sem_destroy(&tutor_sem) != 0) {
+        perror("sem_destroy");
+        ret = -1;
+    }
 destroy_coord:
-    sem_destroy(&coord_sem);
+    if (sem_destroy(&coord_sem) != 0) {
+        perror("sem_destroy");
+        ret = -1;
+    }
 destroy_lock:
-    pthread_mutex_destroy(&lock);
+    if (pthread_mutex_destroy(&lock) != 0) {
+        fprintf(stderr, "pthread_mutex_destroy failed\n");
+        ret = -1;
+    }
     queues_free();
 free_arrays:
     free(students);
