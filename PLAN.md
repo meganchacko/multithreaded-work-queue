@@ -215,9 +215,9 @@ while s->visits_done < num_help:
     arrival_push({s->id, visit, seq})                 // P2's helper, caller holds lock
     unlock
     sem_post(&coord_sem)
-    sem_wait(&s->wake)                                // chair already freed by tutor
+    Sem_wait(&s->wake)                                // chair already freed by tutor
     tutor = s->assigned_tutor
-    sleep 0.2 ms
+    sleep_us(200)
     log_event(LOG_STUDENT_DONE, s->id, tutor, visit)
     s->visits_done++
 return NULL
@@ -227,7 +227,7 @@ return NULL
 
 ```
 loop:
-    sem_wait(&coord_sem)
+    Sem_wait(&coord_sem)
     lock
     if arrival_fifo empty:
         if shutting_down: unlock; break
@@ -238,7 +238,7 @@ loop:
     unlock
     sem_post(&tutor_sem)
 after loop:
-    for i in 1..num_tutors: sem_post(&tutor_sem)    // wake every tutor to exit
+    for i in 1..g_num_tutors: sem_post(&tutor_sem)    // wake every tutor to exit
 return NULL
 ```
 
@@ -247,7 +247,7 @@ return NULL
 ```
 tid = *(int*)arg
 loop:
-    sem_wait(&tutor_sem)
+    Sem_wait(&tutor_sem)
     lock
     if pq empty:
         // only reachable on a shutdown post (invariant 4)
@@ -258,7 +258,7 @@ loop:
     log_event(LOG_ASSIGNED, r.student_id, tid, r.visit)
     unlock
     sem_post(&students[r.student_id - 1].wake)
-    sleep 0.2 ms
+    sleep_us(200)
     log_event(LOG_TUTOR_DONE, r.student_id, tid, r.visit)
 return NULL
 ```
@@ -408,7 +408,7 @@ arrival_fifo storage (buf, head, count, cap), pq storage (buf, count, cap)
 
 **P2.3: Coordinator thread**, as in 4.5. Pop, insert, and `QUEUED` all happen in one critical section, and `tutor_sem` is posted after unlocking.
 
-**P2.4: Tutor thread**, as in 4.5. Removal, `free_chairs++`, the `assigned_tutor` write, and `ASSIGNED` all happen in **one** critical section. Post the student's `wake` after unlocking, then sleep 0.2 ms, then log `TUTOR_DONE`.
+**P2.4: Tutor thread**, as in 4.5. Removal, `free_chairs++`, the `assigned_tutor` write, and `ASSIGNED` all happen in **one** critical section. Post the student's `wake` after unlocking, then `sleep_us(200)`, then log `TUTOR_DONE`.
 
 **P2.5: Coordinator and tutor shutdown logic**, per 4.7 steps 4–5. Both loops must check their queue and the flag **after** waking, so neither goes back to `sem_wait` forever.
 
