@@ -30,23 +30,23 @@ typedef struct {
     unsigned int seed;
 } student_t;
 
-static pthread_mutex_t lock SKELETON_UNUSED;
+static pthread_mutex_t lock;
 
 /* protected by lock */
-static int free_chairs SKELETON_UNUSED;
-static unsigned long next_seq SKELETON_UNUSED;
-static bool shutting_down SKELETON_UNUSED;
+static int free_chairs;
+static unsigned long next_seq;
+static bool shutting_down;
 
-static sem_t coord_sem SKELETON_UNUSED;
-static sem_t tutor_sem SKELETON_UNUSED;
+static sem_t coord_sem;
+static sem_t tutor_sem;
 
-static student_t *students SKELETON_UNUSED;
-static int *tutor_ids SKELETON_UNUSED;
+static student_t *students;
+static int *tutor_ids;
 
-static int g_num_students SKELETON_UNUSED;
-static int g_num_tutors SKELETON_UNUSED;
-static int g_num_chairs SKELETON_UNUSED;
-static int g_num_help SKELETON_UNUSED;
+static int g_num_students;
+static int g_num_tutors;
+static int g_num_chairs;
+static int g_num_help;
 
 /* arrival fifo and priority queue, both protected by lock */
 static request_t *arrival_buf SKELETON_UNUSED;
@@ -65,8 +65,8 @@ static bool arrival_empty(void) SKELETON_UNUSED;
 static void pq_insert(request_t r) SKELETON_UNUSED;
 static request_t pq_remove_best(void) SKELETON_UNUSED;
 static bool pq_empty(void) SKELETON_UNUSED;
-static int queues_alloc(int cap) SKELETON_UNUSED;
-static void queues_free(void) SKELETON_UNUSED;
+static int queues_alloc(int cap);
+static void queues_free(void);
 
 static void *coordinator_thread(void *arg) SKELETON_UNUSED;
 static void *tutor_thread(void *arg) SKELETON_UNUSED;
@@ -201,13 +201,77 @@ static void *student_thread(void *arg)
 static int run_simulation(int num_students, int num_tutors,
                           int num_chairs, int num_help)
 {
-    (void)num_students;
-    (void)num_tutors;
-    (void)num_chairs;
-    (void)num_help;
+    pthread_t *sthreads = NULL, *tthreads = NULL;
+    int nwake = 0;
+    int ret = -1;
 
+    g_num_students = num_students;
+    g_num_tutors = num_tutors;
+    g_num_chairs = num_chairs;
+    g_num_help = num_help;
+
+    students = calloc(num_students, sizeof(*students));
+    tutor_ids = calloc(num_tutors, sizeof(*tutor_ids));
+    sthreads = calloc(num_students, sizeof(*sthreads));
+    tthreads = calloc(num_tutors, sizeof(*tthreads));
+    if (!students || !tutor_ids || !sthreads || !tthreads) {
+        perror("calloc");
+        goto free_arrays;
+    }
+    if (queues_alloc(num_chairs) != 0) {
+        fprintf(stderr, "queues_alloc failed\n");
+        goto free_arrays;
+    }
+
+    Pthread_mutex_init(&lock, NULL);
+    if (sem_init(&coord_sem, 0, 0) != 0) {
+        perror("sem_init");
+        goto destroy_lock;
+    }
+    if (sem_init(&tutor_sem, 0, 0) != 0) {
+        perror("sem_init");
+        goto destroy_coord;
+    }
+
+    unsigned int now = (unsigned int)time(NULL);
+
+    /* nwake counts the wake semaphores created, so we only destroy those */
+    for (nwake = 0; nwake < num_students; nwake++) {
+        students[nwake].id = nwake + 1;
+        students[nwake].visits_done = 0;
+        students[nwake].seed = now ^ ((unsigned int)(nwake + 1) * 2654435761u);
+        if (sem_init(&students[nwake].wake, 0, 0) != 0) {
+            perror("sem_init");
+            goto destroy_wakes;
+        }
+    }
+    for (int i = 0; i < num_tutors; i++) {
+        tutor_ids[i] = i + 1;
+    }
+
+    free_chairs = num_chairs;
+    next_seq = 0;
+    shutting_down = false;
+
+    /* TODO P1.4-P1.6: create threads, join, shut down */
     fprintf(stderr, "Project 2 simulation is not yet implemented.\n");
-    return -1;
+
+destroy_wakes:
+    for (int i = 0; i < nwake; i++) {
+        sem_destroy(&students[i].wake);
+    }
+    sem_destroy(&tutor_sem);
+destroy_coord:
+    sem_destroy(&coord_sem);
+destroy_lock:
+    pthread_mutex_destroy(&lock);
+    queues_free();
+free_arrays:
+    free(students);
+    free(tutor_ids);
+    free(sthreads);
+    free(tthreads);
+    return ret;
 }
 
 int main(int argc, char *argv[])
