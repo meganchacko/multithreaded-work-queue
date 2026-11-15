@@ -123,7 +123,7 @@ It provides **only**:
 
 Each one `assert`s that its return code is 0. That means a failure **aborts** the program rather than returning an error. Because of this, we create threads with raw `pthread_create()` plus an error check, so we can handle failures as the instructions require. We use the helpers for everything else (see 4.8 and section 12).
 
-It has **no semaphore wrappers and no mutex-destroy wrapper**. We write our own small checked wrappers in `csmc.c` for `sem_init`, `sem_wait` (retry on `EINTR`), `sem_post`, and `sem_destroy`.
+It has **no semaphore wrappers and no mutex-destroy wrapper**. We add only `Sem_wait` (retry on `EINTR`) in `csmc.c`, and call `sem_init`, `sem_post`, and `sem_destroy` directly (see section 5).
 
 Its functions are non-static definitions in a header. That's fine because only `csmc.c` includes it.
 
@@ -338,13 +338,14 @@ arrival_fifo storage (buf, head, count, cap), pq storage (buf, count, cap)
 **Person 1 provides:**
 
 - `static void *student_thread(void *arg);` where `arg` is a `student_t*`.
-- Semaphore wrappers. These are capitalized to match the `common_threads.h` style and to avoid clashing with the libc names. Person 2 calls these too. Signatures and behavior (agreed):
-  - `static int Sem_init(sem_t *s, unsigned int value);` returns 0 on success, -1 on failure. The caller handles the failure; it's only called during setup in `run_simulation()`.
-  - `static void Sem_wait(sem_t *s);` retries on `EINTR`. On any other failure it calls `perror` and `abort()`, the same as the `common_threads.h` helpers.
-  - `static void Sem_post(sem_t *s);` On failure it calls `perror` and `abort()`.
-  - `static int Sem_destroy(sem_t *s);` returns 0 on success, -1 on failure.
-  - **Cleanup rule:** if `Sem_destroy` or `pthread_mutex_destroy` fails during cleanup, keep cleaning up everything else, then have `run_simulation()` return nonzero.
-- Sleep helpers: `sleep_us(long us)` using `nanosleep`, and `program_sleep(unsigned *seed)`.
+- Two small helpers (decided; kept deliberately minimal). Person 2 uses both:
+  - `static void Sem_wait(sem_t *s);` retries on `EINTR`. On any other failure it calls `perror` and `abort()`, the same as the `common_threads.h` helpers. Use it for every semaphore wait.
+  - `static void sleep_us(long us);` sleeps with `nanosleep`, resuming with the remaining time on `EINTR`. The tutoring sleep is `sleep_us(200)`.
+- Everything else is called directly, with no wrapper:
+  - `sem_post(&...)`: call it directly. No error handling is required.
+  - `sem_init` and `sem_destroy`: called directly in `run_simulation()` (P1.3 and P1.7), with their return codes checked there.
+  - The programming sleep is written inline in `student_thread`: `sleep_us((2 + rand_r(&s->seed) % 9) * 1000L)`.
+- **Cleanup rule:** if `sem_destroy` or `pthread_mutex_destroy` fails during cleanup, keep cleaning up everything else, then have `run_simulation()` return nonzero.
 - `run_simulation()` with all creation, joining, shutdown triggering, and cleanup.
 
 `-Wall -Werror` turns an unused `static` function or variable into a build error. Every stub and global must be referenced (for example, the thread routines passed to `pthread_create`) or temporarily marked `SKELETON_UNUSED`, a macro in `csmc.c` that expands to `__attribute__((unused))`, or the build breaks. Remove the marker from each declaration once real code uses it.
@@ -361,10 +362,10 @@ arrival_fifo storage (buf, head, count, cap), pq storage (buf, count, cap)
 
 **P1.2: Helpers.**
 
-- Checked semaphore wrappers.
+- `Sem_wait()`: retry on `EINTR`, `perror` + `abort()` on any other error.
 - `sleep_us()` with `nanosleep`, retrying on `EINTR` with the remaining time.
-- `program_sleep()` (decided): a random **whole number of milliseconds in [2, 10]**, i.e. `2 + rand_r(&seed) % 9`, slept via `sleep_us(ms * 1000)`. Mention this choice in the report.
-- Seed each student distinctly, for example `time(NULL) ^ (id * 2654435761u)`.
+- Programming sleep (decided): a random **whole number of milliseconds in [2, 10]**, i.e. `2 + rand_r(&seed) % 9`, written inline in `student_thread` (P1.5) via `sleep_us`. Mention this choice in the report.
+- Per-student seeding is done in P1.3, where each student is initialized.
 
 **P1.3: `run_simulation()` setup.**
 
@@ -389,7 +390,7 @@ arrival_fifo storage (buf, head, count, cap), pq storage (buf, count, cap)
 
 **P1.7: Cleanup.**
 
-- `Sem_destroy` on `coord_sem`, `tutor_sem`, and every `wake`.
+- `sem_destroy` (called directly, return code checked) on `coord_sem`, `tutor_sem`, and every `wake`.
 - `pthread_mutex_destroy(&lock)`, called directly with its return code checked. There is no helper for it in `common_threads.h`.
 - `queues_free()`.
 - Free every array.
@@ -524,6 +525,6 @@ Gaps the starter files fill. These are not conflicts, so we follow the starter f
 
 - **`NO_CHAIR` visit argument:** the README passes the visit being attempted.
 - **Log buffer size:** the README and `logger.h` say the buffer is 5 events per expected visit and the program exits on overflow.
-- **Semaphore and mutex-destroy wrappers:** `common_threads.h` has none, so we write our own in `csmc.c`.
+- **Semaphore and mutex-destroy wrappers:** `common_threads.h` has none. We add only `Sem_wait` (for the `EINTR` retry) and call the rest directly.
 - **Including the helpers:** the starter `csmc.c` doesn't include `common_threads.h`, so we add the include.
 - **Keeping `run_simulation()`:** we keep its name and signature so `main()` is unchanged.
