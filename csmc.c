@@ -71,13 +71,8 @@ static void queues_free(void) SKELETON_UNUSED;
 static void *coordinator_thread(void *arg) SKELETON_UNUSED;
 static void *tutor_thread(void *arg) SKELETON_UNUSED;
 
-static int Sem_init(sem_t *s, unsigned int value) SKELETON_UNUSED;
 static void Sem_wait(sem_t *s) SKELETON_UNUSED;
-static void Sem_post(sem_t *s) SKELETON_UNUSED;
-static int Sem_destroy(sem_t *s) SKELETON_UNUSED;
-
 static void sleep_us(long us) SKELETON_UNUSED;
-static void program_sleep(unsigned int *seed) SKELETON_UNUSED;
 
 static void *student_thread(void *arg) SKELETON_UNUSED;
 
@@ -161,37 +156,26 @@ static void *tutor_thread(void *arg)
     return NULL;
 }
 
-static int Sem_init(sem_t *s, unsigned int value)
-{
-    (void)s; /* TODO P1.2 */
-    (void)value;
-    return -1;
-}
-
 static void Sem_wait(sem_t *s)
 {
-    (void)s; /* TODO P1.2 */
-}
-
-static void Sem_post(sem_t *s)
-{
-    (void)s; /* TODO P1.2 */
-}
-
-static int Sem_destroy(sem_t *s)
-{
-    (void)s; /* TODO P1.2 */
-    return -1;
+    /* a signal can interrupt the wait; that isn't a real post, so wait again */
+    while (sem_wait(s) != 0) {
+        if (errno != EINTR) {
+            perror("sem_wait");
+            abort();
+        }
+    }
 }
 
 static void sleep_us(long us)
 {
-    (void)us; /* TODO P1.2 */
-}
+    struct timespec ts, rem;
 
-static void program_sleep(unsigned int *seed)
-{
-    (void)seed; /* TODO P1.2 */
+    ts.tv_sec = us / 1000000;
+    ts.tv_nsec = (us % 1000000) * 1000;
+    while (nanosleep(&ts, &rem) != 0 && errno == EINTR) {
+        ts = rem;
+    }
 }
 
 static void *student_thread(void *arg)
