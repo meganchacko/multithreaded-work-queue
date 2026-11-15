@@ -59,7 +59,7 @@ static int pq_count SKELETON_UNUSED;
 static int pq_cap SKELETON_UNUSED;
 
 /* queue helpers: caller must hold lock */
-static void arrival_push(request_t r) SKELETON_UNUSED;
+static void arrival_push(request_t r);
 static request_t arrival_pop(void) SKELETON_UNUSED;
 static bool arrival_empty(void) SKELETON_UNUSED;
 static void pq_insert(request_t r) SKELETON_UNUSED;
@@ -71,8 +71,8 @@ static void queues_free(void);
 static void *coordinator_thread(void *arg);
 static void *tutor_thread(void *arg);
 
-static void Sem_wait(sem_t *s) SKELETON_UNUSED;
-static void sleep_us(long us) SKELETON_UNUSED;
+static void Sem_wait(sem_t *s);
+static void sleep_us(long us);
 
 static void *student_thread(void *arg);
 
@@ -180,7 +180,38 @@ static void sleep_us(long us)
 
 static void *student_thread(void *arg)
 {
-    (void)arg; /* TODO P1.5 */
+    student_t *s = arg;
+
+    while (s->visits_done < g_num_help) {
+        int visit = s->visits_done + 1;
+
+        /* programming: a whole number of ms in [2, 10] */
+        sleep_us((2 + rand_r(&s->seed) % 9) * 1000L);
+
+        Pthread_mutex_lock(&lock);
+        if (free_chairs == 0) {
+            log_event(LOG_NO_CHAIR, s->id, -1, visit);
+            Pthread_mutex_unlock(&lock);
+            continue;
+        }
+        /* taking the chair and joining the fifo happen in one critical
+         * section, so fifo order is exactly the order chairs were taken */
+        free_chairs--;
+        request_t r = {s->id, visit, next_seq++};
+        log_event(LOG_SEATED, s->id, -1, visit);
+        arrival_push(r);
+        Pthread_mutex_unlock(&lock);
+        sem_post(&coord_sem);
+
+        /* the tutor frees our chair when it picks us, so we don't touch
+         * free_chairs here; assigned_tutor is set before wake is posted */
+        Sem_wait(&s->wake);
+        int tutor = s->assigned_tutor;
+
+        sleep_us(200);
+        log_event(LOG_STUDENT_DONE, s->id, tutor, visit);
+        s->visits_done++;
+    }
     return NULL;
 }
 
