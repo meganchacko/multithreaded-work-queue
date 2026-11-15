@@ -68,13 +68,13 @@ static bool pq_empty(void) SKELETON_UNUSED;
 static int queues_alloc(int cap);
 static void queues_free(void);
 
-static void *coordinator_thread(void *arg) SKELETON_UNUSED;
-static void *tutor_thread(void *arg) SKELETON_UNUSED;
+static void *coordinator_thread(void *arg);
+static void *tutor_thread(void *arg);
 
 static void Sem_wait(sem_t *s) SKELETON_UNUSED;
 static void sleep_us(long us) SKELETON_UNUSED;
 
-static void *student_thread(void *arg) SKELETON_UNUSED;
+static void *student_thread(void *arg);
 
 /* Accepts decimal digits only, yielding an integer in [1, INT_MAX]. */
 static int parse_positive_int(const char *text, int *result)
@@ -253,8 +253,46 @@ static int run_simulation(int num_students, int num_tutors,
     next_seq = 0;
     shutting_down = false;
 
-    /* TODO P1.4-P1.6: create threads, join, shut down */
-    fprintf(stderr, "Project 2 simulation is not yet implemented.\n");
+    pthread_t coord;
+    int nt = 0, ns = 0;
+
+    if (pthread_create(&coord, NULL, coordinator_thread, NULL) != 0) {
+        fprintf(stderr, "pthread_create failed for coordinator\n");
+        goto destroy_wakes;
+    }
+    for (nt = 0; nt < num_tutors; nt++) {
+        if (pthread_create(&tthreads[nt], NULL, tutor_thread, &tutor_ids[nt]) != 0) {
+            fprintf(stderr, "pthread_create failed for tutor %d\n", nt + 1);
+            break;
+        }
+    }
+    /* only start students once every tutor is running */
+    if (nt == num_tutors) {
+        for (ns = 0; ns < num_students; ns++) {
+            if (pthread_create(&sthreads[ns], NULL, student_thread, &students[ns]) != 0) {
+                fprintf(stderr, "pthread_create failed for student %d\n", ns + 1);
+                break;
+            }
+        }
+    }
+    if (nt == num_tutors && ns == num_students) {
+        ret = 0;
+    }
+
+    /* if a tutor or student failed to start, this still shuts down the ones that did */
+    for (int i = 0; i < ns; i++) {
+        Pthread_join(sthreads[i], NULL);
+    }
+    /* students are done, so both queues are empty; one post lets the
+     * coordinator see shutting_down, and it then wakes every tutor */
+    Pthread_mutex_lock(&lock);
+    shutting_down = true;
+    Pthread_mutex_unlock(&lock);
+    sem_post(&coord_sem);
+    Pthread_join(coord, NULL);
+    for (int i = 0; i < nt; i++) {
+        Pthread_join(tthreads[i], NULL);
+    }
 
 destroy_wakes:
     for (int i = 0; i < nwake; i++) {
