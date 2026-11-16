@@ -11,12 +11,6 @@
 #include <time.h>
 #include <assert.h>
 
-/* This starter deliberately DOES NOT implement the concurrency assignment. */
-
-/* Temporary: keeps -Werror quiet about things nothing uses yet.
- * Remove from each declaration once it's used, then delete the macro. */
-#define SKELETON_UNUSED __attribute__((unused))
-
 typedef struct {
     int student_id;
     int visit;
@@ -33,7 +27,7 @@ typedef struct {
 
 static pthread_mutex_t lock;
 
-/* protected by lock */
+// protected by lock
 static int free_chairs;
 static unsigned long next_seq;
 static bool shutting_down;
@@ -49,17 +43,17 @@ static int g_num_tutors;
 static int g_num_chairs;
 static int g_num_help;
 
-/* arrival fifo and priority queue, both protected by lock */
-static request_t *arrival_buf SKELETON_UNUSED;
-static int arrival_head SKELETON_UNUSED;
-static int arrival_count SKELETON_UNUSED;
-static int arrival_cap SKELETON_UNUSED;
+// arrival fifo and priority queue, both protected by lock
+static request_t *arrival_buf;
+static int arrival_head;
+static int arrival_count;
+static int arrival_cap;
 
-static request_t *pq_buf SKELETON_UNUSED;
-static int pq_count SKELETON_UNUSED;
-static int pq_cap SKELETON_UNUSED;
+static request_t *pq_buf;
+static int pq_count;
+static int pq_cap;
 
-/* queue helpers: caller must hold lock */
+// queue helpers: caller must hold lock
 static void arrival_push(request_t r);
 static request_t arrival_pop(void);
 static bool arrival_empty(void);
@@ -292,7 +286,7 @@ static void *tutor_thread(void *arg)
 
 static void Sem_wait(sem_t *s)
 {
-    /* a signal can interrupt the wait; that isn't a real post, so wait again */
+    // a signal can interrupt the wait; that isn't a real post, so wait again
     while (sem_wait(s) != 0) {
         if (errno != EINTR) {
             perror("sem_wait");
@@ -319,7 +313,7 @@ static void *student_thread(void *arg)
     while (s->visits_done < g_num_help) {
         int visit = s->visits_done + 1;
 
-        /* programming: a whole number of ms in [2, 10] */
+        // programming: a whole number of ms in [2, 10]
         sleep_us((2 + rand_r(&s->seed) % 9) * 1000L);
 
         Pthread_mutex_lock(&lock);
@@ -328,8 +322,8 @@ static void *student_thread(void *arg)
             Pthread_mutex_unlock(&lock);
             continue;
         }
-        /* taking the chair and joining the fifo happen in one critical
-         * section, so fifo order is exactly the order chairs were taken */
+        // taking the chair and joining the fifo happen in one critical
+        // section, so fifo order is exactly the order chairs were taken
         free_chairs--;
         request_t r = {s->id, visit, next_seq++};
         log_event(LOG_SEATED, s->id, -1, visit);
@@ -337,8 +331,8 @@ static void *student_thread(void *arg)
         Pthread_mutex_unlock(&lock);
         sem_post(&coord_sem);
 
-        /* the tutor frees our chair when it picks us, so we don't touch
-         * free_chairs here; assigned_tutor is set before wake is posted */
+        // the tutor frees our chair when it picks us, so we don't touch
+        // free_chairs here; assigned_tutor is set before wake is posted
         Sem_wait(&s->wake);
         int tutor = s->assigned_tutor;
 
@@ -349,20 +343,6 @@ static void *student_thread(void *arg)
     return NULL;
 }
 
-/*
- * TODO: Implement the simulation.
- *
- * Students must design and implement:
- *  - student, coordinator, and tutor thread routines;
- *  - waiting-area and priority-queue data structures;
- *  - all mutex/semaphore synchronization and event logging;
- *  - worker-thread creation, shutdown, and joining.
- *
- * Return 0 ONLY after every worker thread has terminated and been joined.
- * Return nonzero if the simulation cannot complete successfully.
- *
- * The function name/organization is a starting point, not a required design.
- */
 static int run_simulation(int num_students, int num_tutors,
                           int num_chairs, int num_help)
 {
@@ -400,7 +380,7 @@ static int run_simulation(int num_students, int num_tutors,
 
     unsigned int now = (unsigned int)time(NULL);
 
-    /* nwake counts the wake semaphores created, so we only destroy those */
+    // nwake counts the wake semaphores created, so we only destroy those
     for (nwake = 0; nwake < num_students; nwake++) {
         students[nwake].id = nwake + 1;
         students[nwake].visits_done = 0;
@@ -431,7 +411,7 @@ static int run_simulation(int num_students, int num_tutors,
             break;
         }
     }
-    /* only start students once every tutor is running */
+    // only start students once every tutor is running
     if (nt == num_tutors) {
         for (ns = 0; ns < num_students; ns++) {
             if (pthread_create(&sthreads[ns], NULL, student_thread, &students[ns]) != 0) {
@@ -444,12 +424,12 @@ static int run_simulation(int num_students, int num_tutors,
         ret = 0;
     }
 
-    /* if a tutor or student failed to start, this still shuts down the ones that did */
+    // if a tutor or student failed to start, this still shuts down the ones that did
     for (int i = 0; i < ns; i++) {
         Pthread_join(sthreads[i], NULL);
     }
-    /* students are done, so both queues are empty; one post lets the
-     * coordinator see shutting_down, and it then wakes every tutor */
+    // students are done, so both queues are empty; one post lets the
+    // coordinator see shutting_down, and it then wakes every tutor
     Pthread_mutex_lock(&lock);
     shutting_down = true;
     Pthread_mutex_unlock(&lock);
@@ -459,7 +439,7 @@ static int run_simulation(int num_students, int num_tutors,
         Pthread_join(tthreads[i], NULL);
     }
 
-    /* a failed destroy makes the run fail, but we keep cleaning up the rest */
+    // a failed destroy makes the run fail, but we keep cleaning up the rest
 destroy_wakes:
     for (int i = 0; i < nwake; i++) {
         if (sem_destroy(&students[i].wake) != 0) {
@@ -511,7 +491,6 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    /* TODO: Replace run_simulation() with your thread implementation. */
     if (run_simulation(num_students, num_tutors, num_chairs, num_help) != 0) {
         destroy_log();
         return EXIT_FAILURE;
