@@ -197,16 +197,14 @@ static void *coordinator_thread(void *arg)
     (void)arg;
 
     while (true) {
-        // Wait until a student arrives or shutdown begins
         Sem_wait(&coord_sem);
 
         Pthread_mutex_lock(&lock);
 
-        // Check whether the simulation should end
+        // the fifo is only empty here on the shutdown post; pass it on to every tutor
         if (shutting_down && arrival_empty()) {
             Pthread_mutex_unlock(&lock);
 
-            // Wake all tutors so they can terminate
             for (int i = 0; i < g_num_tutors; i++) {
                 sem_post(&tutor_sem);
             }
@@ -214,18 +212,15 @@ static void *coordinator_thread(void *arg)
             break;
         }
 
-        // Process the oldest accepted student request
         if (!arrival_empty()) {
             request_t r = arrival_pop();
 
-            // Move the student into the priority queue
             pq_insert(r);
 
             log_event(LOG_QUEUED, r.student_id, -1, r.visit);
 
             Pthread_mutex_unlock(&lock);
 
-            // Notify an available tutor
             sem_post(&tutor_sem);
         } else {
             Pthread_mutex_unlock(&lock);
@@ -240,44 +235,36 @@ static void *tutor_thread(void *arg)
     int tutor_id = *(int *)arg;
 
     while (true) {
-        // Wait until a student is available
         Sem_wait(&tutor_sem);
 
         Pthread_mutex_lock(&lock);
 
-        // Exit if shutdown has begun and no students remain
         if (shutting_down && pq_empty()) {
             Pthread_mutex_unlock(&lock);
             break;
         }
 
-        // Check if a request is available
         if (pq_empty()) {
             Pthread_mutex_unlock(&lock);
             continue;
         }
 
-        // Select the highest-priority student
         request_t r = pq_remove_best();
 
-        // Student leaves the waiting area immediately
+        // the chair frees when the student is picked, not after tutoring
         free_chairs++;
 
-        // Record which tutor is assigned to the student
         students[r.student_id - 1].assigned_tutor = tutor_id;
 
-        // Log the assignment while holding the lock
+        // ASSIGNED is logged under the lock, before the student is woken
         log_event(LOG_ASSIGNED, r.student_id, tutor_id, r.visit);
 
         Pthread_mutex_unlock(&lock);
 
-        // Notify the selected student
         sem_post(&students[r.student_id - 1].wake);
 
-        // Simulate tutoring for 0.2 milliseconds
         sleep_us(200);
 
-        // Tutor finishes tutoring
         log_event(LOG_TUTOR_DONE, r.student_id, tutor_id, r.visit);
     }
 
