@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <assert.h>
 
 /* This starter deliberately DOES NOT implement the concurrency assignment. */
 
@@ -60,11 +61,11 @@ static int pq_cap SKELETON_UNUSED;
 
 /* queue helpers: caller must hold lock */
 static void arrival_push(request_t r);
-static request_t arrival_pop(void) SKELETON_UNUSED;
-static bool arrival_empty(void) SKELETON_UNUSED;
-static void pq_insert(request_t r) SKELETON_UNUSED;
-static request_t pq_remove_best(void) SKELETON_UNUSED;
-static bool pq_empty(void) SKELETON_UNUSED;
+static request_t arrival_pop(void);
+static bool arrival_empty(void);
+static void pq_insert(request_t r);
+static request_t pq_remove_best(void);
+static bool pq_empty(void);
 static int queues_alloc(int cap);
 static void queues_free(void);
 
@@ -101,58 +102,191 @@ static int parse_positive_int(const char *text, int *result)
     return 0;
 }
 
+
 static void arrival_push(request_t r)
 {
-    (void)r; /* TODO P2.1 */
+    assert(arrival_count < arrival_cap);
+
+    int tail = (arrival_head + arrival_count) % arrival_cap;
+    arrival_buf[tail] = r;
+    arrival_count++;
 }
 
 static request_t arrival_pop(void)
 {
-    request_t r = {0}; /* TODO P2.1 */
+    assert(arrival_count > 0);
+
+    request_t r = arrival_buf[arrival_head];
+    arrival_head = (arrival_head + 1) % arrival_cap;
+    arrival_count--;
+
     return r;
 }
 
 static bool arrival_empty(void)
 {
-    return true; /* TODO P2.1 */
+    return arrival_count == 0;
 }
 
 static void pq_insert(request_t r)
 {
-    (void)r; /* TODO P2.2 */
+    assert(pq_count < pq_cap);
+
+    pq_buf[pq_count] = r;
+    pq_count++;
 }
 
 static request_t pq_remove_best(void)
 {
-    request_t r = {0}; /* TODO P2.2 */
+    assert(pq_count > 0);
+
+    int best = 0;
+
+    for (int i = 1; i < pq_count; i++) {
+        if (pq_buf[i].visit < pq_buf[best].visit ||
+            (pq_buf[i].visit == pq_buf[best].visit &&
+             pq_buf[i].seq < pq_buf[best].seq)) {
+            best = i;
+        }
+    }
+
+    request_t r = pq_buf[best];
+
+    for (int i = best; i < pq_count - 1; i++) {
+        pq_buf[i] = pq_buf[i + 1];
+    }
+
+    pq_count--;
+
     return r;
 }
 
 static bool pq_empty(void)
 {
-    return true; /* TODO P2.2 */
+    return pq_count == 0;
 }
 
 static int queues_alloc(int cap)
 {
-    (void)cap; /* TODO P2.2 */
-    return -1;
+    arrival_buf = calloc((size_t)cap, sizeof(*arrival_buf));
+    pq_buf = calloc((size_t)cap, sizeof(*pq_buf));
+
+    if (arrival_buf == NULL || pq_buf == NULL) {
+        free(arrival_buf);
+        free(pq_buf);
+        arrival_buf = NULL;
+        pq_buf = NULL;
+        return -1;
+    }
+
+    arrival_cap = cap;
+    arrival_head = 0;
+    arrival_count = 0;
+
+    pq_cap = cap;
+    pq_count = 0;
+
+    return 0;
 }
 
 static void queues_free(void)
 {
-    /* TODO P2.2 */
+    free(arrival_buf);
+    free(pq_buf);
+
+    arrival_buf = NULL;
+    pq_buf = NULL;
 }
 
 static void *coordinator_thread(void *arg)
 {
-    (void)arg; /* TODO P2.3, P2.5 */
+    (void)arg;
+
+    while (true) {
+        // Wait until a student arrives or shutdown begins
+        Sem_wait(&coord_sem);
+
+        Pthread_mutex_lock(&lock);
+
+        // Check whether the simulation should end
+        if (shutting_down && arrival_empty()) {
+            Pthread_mutex_unlock(&lock);
+
+            // Wake all tutors so they can terminate
+            for (int i = 0; i < g_num_tutors; i++) {
+                sem_post(&tutor_sem);
+            }
+
+            break;
+        }
+
+        // Process the oldest accepted student request
+        if (!arrival_empty()) {
+            request_t r = arrival_pop();
+
+            // Move the student into the priority queue
+            pq_insert(r);
+
+            log_event(LOG_QUEUED, r.student_id, -1, r.visit);
+
+            Pthread_mutex_unlock(&lock);
+
+            // Notify an available tutor
+            sem_post(&tutor_sem);
+        } else {
+            Pthread_mutex_unlock(&lock);
+        }
+    }
+
     return NULL;
 }
 
 static void *tutor_thread(void *arg)
 {
-    (void)arg; /* TODO P2.4, P2.5 */
+    int tutor_id = *(int *)arg;
+
+    while (true) {
+        // Wait until a student is available
+        Sem_wait(&tutor_sem);
+
+        Pthread_mutex_lock(&lock);
+
+        // Exit if shutdown has begun and no students remain
+        if (shutting_down && pq_empty()) {
+            Pthread_mutex_unlock(&lock);
+            break;
+        }
+
+        // Check if a request is available
+        if (pq_empty()) {
+            Pthread_mutex_unlock(&lock);
+            continue;
+        }
+
+        // Select the highest-priority student
+        request_t r = pq_remove_best();
+
+        // Student leaves the waiting area immediately
+        free_chairs++;
+
+        // Record which tutor is assigned to the student
+        students[r.student_id - 1].assigned_tutor = tutor_id;
+
+        // Log the assignment while holding the lock
+        log_event(LOG_ASSIGNED, r.student_id, tutor_id, r.visit);
+
+        Pthread_mutex_unlock(&lock);
+
+        // Notify the selected student
+        sem_post(&students[r.student_id - 1].wake);
+
+        // Simulate tutoring for 0.2 milliseconds
+        sleep_us(200);
+
+        // Tutor finishes tutoring
+        log_event(LOG_TUTOR_DONE, r.student_id, tutor_id, r.visit);
+    }
+
     return NULL;
 }
 
