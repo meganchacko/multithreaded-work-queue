@@ -1,0 +1,81 @@
+S SEATED student=2 visit=1
+C QUEUED student=2 visit=1
+T ASSIGNED student=2 tutor=1 visit=1
+T TUTOR_DONE student=2 tutor=1 visit=1
+S STUDENT_DONE student=2 tutor=1 visit=1
+S SEATED student=3 visit=1
+C QUEUED student=3 visit=1
+T ASSIGNED student=3 tutor=1 visit=1
+T TUTOR_DONE student=3 tutor=1 visit=1
+S STUDENT_DONE student=3 tutor=1 visit=1
+S SEATED student=1 visit=1
+C QUEUED student=1 visit=1
+T ASSIGNED student=1 tutor=1 visit=1
+T TUTOR_DONE student=1 tutor=1 visit=1
+S STUDENT_DONE student=1 tutor=1 visit=1
+S SEATED student=4 visit=1
+C QUEUED student=4 visit=1
+T ASSIGNED student=4 tutor=1 visit=1
+S STUDENT_DONE student=4 tutor=1 visit=1
+T TUTOR_DONE student=4 tutor=1 visit=1
+S SEATED student=2 visit=2
+C QUEUED student=2 visit=2
+T ASSIGNED student=2 tutor=1 visit=2
+S STUDENT_DONE student=2 tutor=1 visit=2
+T TUTOR_DONE student=2 tutor=1 visit=2
+S SEATED student=3 visit=2
+C QUEUED student=3 visit=2
+T ASSIGNED student=3 tutor=1 visit=2
+T TUTOR_DONE student=3 tutor=1 visit=2
+S STUDENT_DONE student=3 tutor=1 visit=2
+S SEATED student=1 visit=2
+C QUEUED student=1 visit=2
+T ASSIGNED student=1 tutor=1 visit=2
+T TUTOR_DONE student=1 tutor=1 visit=2
+S STUDENT_DONE student=1 tutor=1 visit=2
+S SEATED student=2 visit=3
+C QUEUED student=2 visit=3
+T ASSIGNED student=2 tutor=1 visit=3
+T TUTOR_DONE student=2 tutor=1 visit=3
+S STUDENT_DONE student=2 tutor=1 visit=3
+S SEATED student=1 visit=3
+S SEATED student=4 visit=2
+C QUEUED student=1 visit=3
+C QUEUED student=4 visit=2
+T ASSIGNED student=4 tutor=1 visit=2
+S STUDENT_DONE student=4 tutor=1 visit=2
+T TUTOR_DONE student=4 tutor=1 visit=2
+T ASSIGNED student=1 tutor=1 visit=3
+T TUTOR_DONE student=1 tutor=1 visit=3
+S STUDENT_DONE student=1 tutor=1 visit=3
+S SEATED student=2 visit=4
+C QUEUED student=2 visit=4
+T ASSIGNED student=2 tutor=1 visit=4
+S STUDENT_DONE student=2 tutor=1 visit=4
+T TUTOR_DONE student=2 tutor=1 visit=4
+S SEATED student=4 visit=3
+C QUEUED student=4 visit=3
+T ASSIGNED student=4 tutor=1 visit=3
+T TUTOR_DONE student=4 tutor=1 visit=3
+S STUDENT_DONE student=4 tutor=1 visit=3
+S SEATED student=3 visit=3
+C QUEUED student=3 visit=3
+T ASSIGNED student=3 tutor=1 visit=3
+S STUDENT_DONE student=3 tutor=1 visit=3
+T TUTOR_DONE student=3 tutor=1 visit=3
+S SEATED student=1 visit=4
+C QUEUED student=1 visit=4
+T ASSIGNED student=1 tutor=1 visit=4
+T TUTOR_DONE student=1 tutor=1 visit=4
+S STUDENT_DONE student=1 tutor=1 visit=4
+S SEATED student=4 visit=4
+C QUEUED student=4 visit=4
+T ASSIGNED student=4 tutor=1 visit=4
+S STUDENT_DONE student=4 tutor=1 visit=4
+T TUTOR_DONE student=4 tutor=1 visit=4
+S SEATED student=3 visit=4
+C QUEUED student=3 visit=4
+T ASSIGNED student=3 tutor=1 visit=4
+T TUTOR_DONE student=3 tutor=1 visit=4
+S STUDENT_DONE student=3 tutor=1 visit=4
+SUMMARY expected=16 seated=16 queued=16 assigned=16 student_done=16 tutor_done=16 no_chair=0

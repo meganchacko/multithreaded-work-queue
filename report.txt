@@ -1,0 +1,15 @@
+Additional Test Configurations
+1: ./csmc 25 2 1 6
+    The purpose of this test is to see how our program performs when there is a lot of contention with there being only one waiting chair available and repeated visits to the tutoring center. What we observed is that all the 150 sessions completed successfully, and there were 50 total unsuccessful chair attempts which tells us that the student retried when the waiting area was full.
+
+2: ./csmc 7 3 2 4
+    The purpose of this test is to see what happens when multiple tutors have to compete for requests with the waiting-room capacity being limited. What we observed is all 28 tutoring sessions completed successfully and there were no unsuccessful chair attempts.
+
+3: ./csmc 40 50 3 2
+    The purpose of this test is to observe a configuration where there are more tutors than there are students and to verify that idle tutor threads terminate. We observed that all 80 expected sessions completed successfully, and there were 0 unsuccessful chair attempts. The program terminated successfully.
+
+Synchronization Design
+For our program we designed a shared mutex to protect the arrival and priority queues, the shutdown state, and chair availability. With the arrival queue, it follows FIFO order, and with the priority queue the program selects students according to their visit number, allowing the arrival order to break any ties. A semaphore is used to allow the coordinator to wait on student arrivals and the coordinator transfers accepted requests into the priority queue. A separate semaphore is used to make tutors wait for available requests, select the student with the highest priority, free the waiting chair, and signal the selected student's personal semaphore. We coordinated shutdown after all student threads finish, which allows a clean exit for coordinators and tutors. 
+
+Bugs and Corrections
+TBD

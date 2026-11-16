@@ -1,0 +1,401 @@
+S SEATED student=5 visit=1
+C QUEUED student=5 visit=1
+T ASSIGNED student=5 tutor=1 visit=1
+T TUTOR_DONE student=5 tutor=1 visit=1
+S STUDENT_DONE student=5 tutor=1 visit=1
+S SEATED student=3 visit=1
+C QUEUED student=3 visit=1
+T ASSIGNED student=3 tutor=2 visit=1
+T TUTOR_DONE student=3 tutor=2 visit=1
+S STUDENT_DONE student=3 tutor=2 visit=1
+S SEATED student=1 visit=1
+C QUEUED student=1 visit=1
+T ASSIGNED student=1 tutor=3 visit=1
+S SEATED student=4 visit=1
+C QUEUED student=4 visit=1
+S STUDENT_DONE student=1 tutor=3 visit=1
+T ASSIGNED student=4 tutor=4 visit=1
+T TUTOR_DONE student=1 tutor=3 visit=1
+S SEATED student=18 visit=1
+C QUEUED student=18 visit=1
+T ASSIGNED student=18 tutor=5 visit=1
+S SEATED student=6 visit=1
+C QUEUED student=6 visit=1
+T ASSIGNED student=6 tutor=6 visit=1
+S STUDENT_DONE student=4 tutor=4 visit=1
+T TUTOR_DONE student=4 tutor=4 visit=1
+S STUDENT_DONE student=18 tutor=5 visit=1
+S SEATED student=8 visit=1
+T TUTOR_DONE student=6 tutor=6 visit=1
+T TUTOR_DONE student=18 tutor=5 visit=1
+S STUDENT_DONE student=6 tutor=6 visit=1
+C QUEUED student=8 visit=1
+T ASSIGNED student=8 tutor=7 visit=1
+S STUDENT_DONE student=8 tutor=7 visit=1
+T TUTOR_DONE student=8 tutor=7 visit=1
+S SEATED student=24 visit=1
+C QUEUED student=24 visit=1
+T ASSIGNED student=24 tutor=8 visit=1
+T TUTOR_DONE student=24 tutor=8 visit=1
+S STUDENT_DONE student=24 tutor=8 visit=1
+S SEATED student=15 visit=1
+S SEATED student=21 visit=1
+C QUEUED student=15 visit=1
+C QUEUED student=21 visit=1
+S SEATED student=16 visit=1
+C QUEUED student=16 visit=1
+T ASSIGNED student=15 tutor=9 visit=1
+T ASSIGNED student=21 tutor=10 visit=1
+T ASSIGNED student=16 tutor=12 visit=1
+S SEATED student=28 visit=1
+C QUEUED student=28 visit=1
+T ASSIGNED student=28 tutor=11 visit=1
+T TUTOR_DONE student=16 tutor=12 visit=1
+T TUTOR_DONE student=21 tutor=10 visit=1
+S SEATED student=1 visit=2
+S STUDENT_DONE student=15 tutor=9 visit=1
+S STUDENT_DONE student=21 tutor=10 visit=1
+S STUDENT_DONE student=16 tutor=12 visit=1
+T TUTOR_DONE student=15 tutor=9 visit=1
+C QUEUED student=1 visit=2
+T ASSIGNED student=1 tutor=13 visit=2
+S SEATED student=31 visit=1
+C QUEUED student=31 visit=1
+T ASSIGNED student=31 tutor=14 visit=1
+S SEATED student=26 visit=1
+T TUTOR_DONE student=28 tutor=11 visit=1
+C QUEUED student=26 visit=1
+T ASSIGNED student=26 tutor=15 visit=1
+S SEATED student=9 visit=1
+C QUEUED student=9 visit=1
+T TUTOR_DONE student=1 tutor=13 visit=2
+T ASSIGNED student=9 tutor=13 visit=1
+S SEATED student=32 visit=1
+S STUDENT_DONE student=28 tutor=11 visit=1
+C QUEUED student=32 visit=1
+T ASSIGNED student=32 tutor=16 visit=1
+S STUDENT_DONE student=1 tutor=13 visit=2
+S STUDENT_DONE student=31 tutor=14 visit=1
+T TUTOR_DONE student=31 tutor=14 visit=1
+T TUTOR_DONE student=26 tutor=15 visit=1
+S SEATED student=23 visit=1
+C QUEUED student=23 visit=1
+S STUDENT_DONE student=26 tutor=15 visit=1
+T TUTOR_DONE student=9 tutor=13 visit=1
+T ASSIGNED student=23 tutor=13 visit=1
+T TUTOR_DONE student=32 tutor=16 visit=1
+S SEATED student=35 visit=1
+S STUDENT_DONE student=9 tutor=13 visit=1
+C QUEUED student=35 visit=1
+S STUDENT_DONE student=32 tutor=16 visit=1
+T ASSIGNED student=35 tutor=19 visit=1
+T TUTOR_DONE student=23 tutor=13 visit=1
+S SEATED student=7 visit=1
+S STUDENT_DONE student=23 tutor=13 visit=1
+S SEATED student=25 visit=1
+C QUEUED student=7 visit=1
+S SEATED student=20 visit=1
+C QUEUED student=25 visit=1
+T ASSIGNED student=7 tutor=20 visit=1
+C QUEUED student=20 visit=1
+T ASSIGNED student=25 tutor=21 visit=1
+T ASSIGNED student=20 tutor=22 visit=1
+S STUDENT_DONE student=35 tutor=19 visit=1
+T TUTOR_DONE student=35 tutor=19 visit=1
+S SEATED student=5 visit=2
+S SEATED student=27 visit=1
+C QUEUED student=5 visit=2
+C QUEUED student=27 visit=1
+T ASSIGNED student=27 tutor=23 visit=1
+T ASSIGNED student=5 tutor=24 visit=2
+T TUTOR_DONE student=7 tutor=20 visit=1
+S STUDENT_DONE student=25 tutor=21 visit=1
+S STUDENT_DONE student=20 tutor=22 visit=1
+T TUTOR_DONE student=25 tutor=21 visit=1
+S SEATED student=10 visit=1
+T TUTOR_DONE student=20 tutor=22 visit=1
+C QUEUED student=10 visit=1
+S STUDENT_DONE student=7 tutor=20 visit=1
+T ASSIGNED student=10 tutor=25 visit=1
+S STUDENT_DONE student=5 tutor=24 visit=2
+T TUTOR_DONE student=27 tutor=23 visit=1
+S STUDENT_DONE student=27 tutor=23 visit=1
+T TUTOR_DONE student=5 tutor=24 visit=2
+S SEATED student=19 visit=1
+C QUEUED student=19 visit=1
+T TUTOR_DONE student=10 tutor=25 visit=1
+T ASSIGNED student=19 tutor=25 visit=1
+S STUDENT_DONE student=10 tutor=25 visit=1
+S SEATED student=14 visit=1
+C QUEUED student=14 visit=1
+T ASSIGNED student=14 tutor=27 visit=1
+T TUTOR_DONE student=19 tutor=25 visit=1
+S SEATED student=18 visit=2
+S STUDENT_DONE student=19 tutor=25 visit=1
+C QUEUED student=18 visit=2
+T ASSIGNED student=18 tutor=28 visit=2
+S STUDENT_DONE student=14 tutor=27 visit=1
+T TUTOR_DONE student=18 tutor=28 visit=2
+T TUTOR_DONE student=14 tutor=27 visit=1
+S STUDENT_DONE student=18 tutor=28 visit=2
+S SEATED student=15 visit=2
+C QUEUED student=15 visit=2
+T ASSIGNED student=15 tutor=29 visit=2
+S SEATED student=2 visit=1
+C QUEUED student=2 visit=1
+T ASSIGNED student=2 tutor=30 visit=1
+S SEATED student=38 visit=1
+T TUTOR_DONE student=15 tutor=29 visit=2
+C QUEUED student=38 visit=1
+S SEATED student=6 visit=2
+T ASSIGNED student=38 tutor=31 visit=1
+C QUEUED student=6 visit=2
+T ASSIGNED student=6 tutor=32 visit=2
+S STUDENT_DONE student=15 tutor=29 visit=2
+T TUTOR_DONE student=2 tutor=30 visit=1
+S STUDENT_DONE student=2 tutor=30 visit=1
+T TUTOR_DONE student=38 tutor=31 visit=1
+T TUTOR_DONE student=6 tutor=32 visit=2
+S STUDENT_DONE student=6 tutor=32 visit=2
+S STUDENT_DONE student=38 tutor=31 visit=1
+S SEATED student=9 visit=2
+C QUEUED student=9 visit=2
+T ASSIGNED student=9 tutor=33 visit=2
+S SEATED student=37 visit=1
+C QUEUED student=37 visit=1
+T ASSIGNED student=37 tutor=34 visit=1
+T TUTOR_DONE student=9 tutor=33 visit=2
+S STUDENT_DONE student=9 tutor=33 visit=2
+S STUDENT_DONE student=37 tutor=34 visit=1
+T TUTOR_DONE student=37 tutor=34 visit=1
+S SEATED student=11 visit=1
+C QUEUED student=11 visit=1
+T ASSIGNED student=11 tutor=35 visit=1
+S SEATED student=29 visit=1
+C QUEUED student=29 visit=1
+T ASSIGNED student=29 tutor=36 visit=1
+S SEATED student=12 visit=1
+C QUEUED student=12 visit=1
+T ASSIGNED student=12 tutor=37 visit=1
+S SEATED student=32 visit=2
+C QUEUED student=32 visit=2
+S SEATED student=13 visit=1
+T TUTOR_DONE student=11 tutor=35 visit=1
+T ASSIGNED student=32 tutor=35 visit=2
+S SEATED student=16 visit=2
+S SEATED student=3 visit=2
+C QUEUED student=13 visit=1
+C QUEUED student=16 visit=2
+C QUEUED student=3 visit=2
+S STUDENT_DONE student=11 tutor=35 visit=1
+T ASSIGNED student=13 tutor=40 visit=1
+T ASSIGNED student=16 tutor=39 visit=2
+S STUDENT_DONE student=29 tutor=36 visit=1
+T TUTOR_DONE student=29 tutor=36 visit=1
+T ASSIGNED student=3 tutor=41 visit=2
+S SEATED student=10 visit=2
+C QUEUED student=10 visit=2
+T ASSIGNED student=10 tutor=42 visit=2
+T TUTOR_DONE student=12 tutor=37 visit=1
+S STUDENT_DONE student=12 tutor=37 visit=1
+T TUTOR_DONE student=32 tutor=35 visit=2
+T TUTOR_DONE student=13 tutor=40 visit=1
+S STUDENT_DONE student=32 tutor=35 visit=2
+S STUDENT_DONE student=16 tutor=39 visit=2
+T TUTOR_DONE student=16 tutor=39 visit=2
+S STUDENT_DONE student=13 tutor=40 visit=1
+S SEATED student=34 visit=1
+S STUDENT_DONE student=3 tutor=41 visit=2
+T TUTOR_DONE student=10 tutor=42 visit=2
+S STUDENT_DONE student=10 tutor=42 visit=2
+T TUTOR_DONE student=3 tutor=41 visit=2
+C QUEUED student=34 visit=1
+S SEATED student=19 visit=2
+C QUEUED student=19 visit=2
+T ASSIGNED student=34 tutor=43 visit=1
+T ASSIGNED student=19 tutor=44 visit=2
+S SEATED student=17 visit=1
+C QUEUED student=17 visit=1
+T ASSIGNED student=17 tutor=45 visit=1
+T TUTOR_DONE student=34 tutor=43 visit=1
+S SEATED student=36 visit=1
+T TUTOR_DONE student=19 tutor=44 visit=2
+C QUEUED student=36 visit=1
+S STUDENT_DONE student=34 tutor=43 visit=1
+T ASSIGNED student=36 tutor=46 visit=1
+S STUDENT_DONE student=19 tutor=44 visit=2
+T TUTOR_DONE student=17 tutor=45 visit=1
+S SEATED student=21 visit=2
+S STUDENT_DONE student=17 tutor=45 visit=1
+C QUEUED student=21 visit=2
+S SEATED student=4 visit=2
+C QUEUED student=4 visit=2
+T ASSIGNED student=21 tutor=47 visit=2
+T ASSIGNED student=4 tutor=48 visit=2
+T TUTOR_DONE student=36 tutor=46 visit=1
+S STUDENT_DONE student=36 tutor=46 visit=1
+S SEATED student=33 visit=1
+C QUEUED student=33 visit=1
+T ASSIGNED student=33 tutor=49 visit=1
+T TUTOR_DONE student=4 tutor=48 visit=2
+S STUDENT_DONE student=4 tutor=48 visit=2
+S STUDENT_DONE student=21 tutor=47 visit=2
+T TUTOR_DONE student=21 tutor=47 visit=2
+S SEATED student=37 visit=2
+C QUEUED student=37 visit=2
+S SEATED student=31 visit=2
+T ASSIGNED student=37 tutor=50 visit=2
+C QUEUED student=31 visit=2
+T ASSIGNED student=31 tutor=1 visit=2
+S SEATED student=22 visit=1
+C QUEUED student=22 visit=1
+T ASSIGNED student=22 tutor=2 visit=1
+S SEATED student=2 visit=2
+T TUTOR_DONE student=33 tutor=49 visit=1
+S SEATED student=30 visit=1
+S STUDENT_DONE student=33 tutor=49 visit=1
+C QUEUED student=2 visit=2
+C QUEUED student=30 visit=1
+T ASSIGNED student=30 tutor=3 visit=1
+T ASSIGNED student=2 tutor=4 visit=2
+S SEATED student=8 visit=2
+T TUTOR_DONE student=37 tutor=50 visit=2
+C QUEUED student=8 visit=2
+S SEATED student=27 visit=2
+C QUEUED student=27 visit=2
+T ASSIGNED student=8 tutor=6 visit=2
+T ASSIGNED student=27 tutor=5 visit=2
+S STUDENT_DONE student=31 tutor=1 visit=2
+S STUDENT_DONE student=22 tutor=2 visit=1
+T TUTOR_DONE student=22 tutor=2 visit=1
+T TUTOR_DONE student=31 tutor=1 visit=2
+S STUDENT_DONE student=37 tutor=50 visit=2
+T TUTOR_DONE student=30 tutor=3 visit=1
+S STUDENT_DONE student=30 tutor=3 visit=1
+T TUTOR_DONE student=2 tutor=4 visit=2
+T TUTOR_DONE student=8 tutor=6 visit=2
+S STUDENT_DONE student=2 tutor=4 visit=2
+T TUTOR_DONE student=27 tutor=5 visit=2
+S STUDENT_DONE student=8 tutor=6 visit=2
+S SEATED student=29 visit=2
+S STUDENT_DONE student=27 tutor=5 visit=2
+C QUEUED student=29 visit=2
+T ASSIGNED student=29 tutor=7 visit=2
+T TUTOR_DONE student=29 tutor=7 visit=2
+S STUDENT_DONE student=29 tutor=7 visit=2
+S SEATED student=38 visit=2
+C QUEUED student=38 visit=2
+T ASSIGNED student=38 tutor=8 visit=2
+S SEATED student=24 visit=2
+C QUEUED student=24 visit=2
+T ASSIGNED student=24 tutor=12 visit=2
+T TUTOR_DONE student=38 tutor=8 visit=2
+S STUDENT_DONE student=38 tutor=8 visit=2
+S STUDENT_DONE student=24 tutor=12 visit=2
+T TUTOR_DONE student=24 tutor=12 visit=2
+S SEATED student=25 visit=2
+C QUEUED student=25 visit=2
+T ASSIGNED student=25 tutor=10 visit=2
+S SEATED student=20 visit=2
+S SEATED student=26 visit=2
+C QUEUED student=20 visit=2
+C QUEUED student=26 visit=2
+T ASSIGNED student=20 tutor=9 visit=2
+T ASSIGNED student=26 tutor=11 visit=2
+T TUTOR_DONE student=25 tutor=10 visit=2
+S STUDENT_DONE student=25 tutor=10 visit=2
+T TUTOR_DONE student=26 tutor=11 visit=2
+S STUDENT_DONE student=20 tutor=9 visit=2
+T TUTOR_DONE student=20 tutor=9 visit=2
+S STUDENT_DONE student=26 tutor=11 visit=2
+S SEATED student=39 visit=1
+C QUEUED student=39 visit=1
+S SEATED student=35 visit=2
+C QUEUED student=35 visit=2
+T ASSIGNED student=39 tutor=17 visit=1
+T ASSIGNED student=35 tutor=14 visit=2
+S SEATED student=40 visit=1
+C QUEUED student=40 visit=1
+T ASSIGNED student=40 tutor=15 visit=1
+S STUDENT_DONE student=39 tutor=17 visit=1
+S STUDENT_DONE student=35 tutor=14 visit=2
+T TUTOR_DONE student=35 tutor=14 visit=2
+T TUTOR_DONE student=39 tutor=17 visit=1
+T TUTOR_DONE student=40 tutor=15 visit=1
+S STUDENT_DONE student=40 tutor=15 visit=1
+S SEATED student=23 visit=2
+C QUEUED student=23 visit=2
+T ASSIGNED student=23 tutor=18 visit=2
+S SEATED student=28 visit=2
+C QUEUED student=28 visit=2
+T ASSIGNED student=28 tutor=16 visit=2
+T TUTOR_DONE student=23 tutor=18 visit=2
+S STUDENT_DONE student=23 tutor=18 visit=2
+S SEATED student=7 visit=2
+T TUTOR_DONE student=28 tutor=16 visit=2
+C QUEUED student=7 visit=2
+S STUDENT_DONE student=28 tutor=16 visit=2
+T ASSIGNED student=7 tutor=13 visit=2
+S SEATED student=33 visit=2
+C QUEUED student=33 visit=2
+T ASSIGNED student=33 tutor=19 visit=2
+T TUTOR_DONE student=7 tutor=13 visit=2
+S STUDENT_DONE student=7 tutor=13 visit=2
+S STUDENT_DONE student=33 tutor=19 visit=2
+T TUTOR_DONE student=33 tutor=19 visit=2
+S SEATED student=36 visit=2
+C QUEUED student=36 visit=2
+T ASSIGNED student=36 tutor=20 visit=2
+T TUTOR_DONE student=36 tutor=20 visit=2
+S STUDENT_DONE student=36 tutor=20 visit=2
+S SEATED student=14 visit=2
+C QUEUED student=14 visit=2
+T ASSIGNED student=14 tutor=21 visit=2
+S SEATED student=22 visit=2
+C QUEUED student=22 visit=2
+T ASSIGNED student=22 tutor=22 visit=2
+T TUTOR_DONE student=14 tutor=21 visit=2
+S STUDENT_DONE student=14 tutor=21 visit=2
+S SEATED student=11 visit=2
+C QUEUED student=11 visit=2
+T ASSIGNED student=11 tutor=23 visit=2
+S SEATED student=30 visit=2
+C QUEUED student=30 visit=2
+T ASSIGNED student=30 tutor=24 visit=2
+T TUTOR_DONE student=22 tutor=22 visit=2
+S STUDENT_DONE student=22 tutor=22 visit=2
+S SEATED student=12 visit=2
+C QUEUED student=12 visit=2
+T ASSIGNED student=12 tutor=26 visit=2
+T TUTOR_DONE student=11 tutor=23 visit=2
+S STUDENT_DONE student=11 tutor=23 visit=2
+S STUDENT_DONE student=30 tutor=24 visit=2
+T TUTOR_DONE student=30 tutor=24 visit=2
+T TUTOR_DONE student=12 tutor=26 visit=2
+S STUDENT_DONE student=12 tutor=26 visit=2
+S SEATED student=40 visit=2
+C QUEUED student=40 visit=2
+T ASSIGNED student=40 tutor=25 visit=2
+T TUTOR_DONE student=40 tutor=25 visit=2
+S STUDENT_DONE student=40 tutor=25 visit=2
+S SEATED student=17 visit=2
+C QUEUED student=17 visit=2
+T ASSIGNED student=17 tutor=28 visit=2
+S SEATED student=13 visit=2
+T TUTOR_DONE student=17 tutor=28 visit=2
+C QUEUED student=13 visit=2
+T ASSIGNED student=13 tutor=27 visit=2
+S STUDENT_DONE student=17 tutor=28 visit=2
+T TUTOR_DONE student=13 tutor=27 visit=2
+S SEATED student=34 visit=2
+S STUDENT_DONE student=13 tutor=27 visit=2
+C QUEUED student=34 visit=2
+T ASSIGNED student=34 tutor=29 visit=2
+S STUDENT_DONE student=34 tutor=29 visit=2
+T TUTOR_DONE student=34 tutor=29 visit=2
+S SEATED student=39 visit=2
+C QUEUED student=39 visit=2
+T ASSIGNED student=39 tutor=30 visit=2
+T TUTOR_DONE student=39 tutor=30 visit=2
+S STUDENT_DONE student=39 tutor=30 visit=2
+SUMMARY expected=80 seated=80 queued=80 assigned=80 student_done=80 tutor_done=80 no_chair=0
