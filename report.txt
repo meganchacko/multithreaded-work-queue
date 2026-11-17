@@ -9,7 +9,7 @@ Additional Test Configurations
     The purpose of this test is to observe our program's behavior when there are significantly more tutors than students, specifically if tutors waiting for requests can exit properly at the end of the program. We saw that all 40 tutoring sessions completed successfully, and there were no unsuccessful chair attempts. The program termination was also successful, so we confirmed that idle tutor threads shut down properly and don't stay stuck waiting for students to arrive.
 
 Synchronization Design:
-Our program uses two queues, an arrival and priority queue, along with a shared mutex to maintain them properly. The arrival queue keeps track of the students in the order they sat in the waiting chair, and tthe priority queue determines which student receives help next based on their visit number. Priority is affected by the number of past visits, students with fewer visits are assigned higher priority, and students with the same priority are assisted in a FIFO order. The mutex prevents the multiple threads, accessing these queues and other shared variables, from modifying data simultaneously.
+Our program uses two queues, an arrival and priority queue, along with a shared mutex to maintain them properly. The arrival queue keeps track of the students in the order they sat in the waiting chair, and the priority queue uses the visit number to determine which student receives help next. The number of visits determines a students priority, students with fewer visits are assigned higher priority, and students with the same priority are assisted in a FIFO order. The mutex prevents the multiple threads accessing these queues, and other shared variables, from modifying data simultaneously.
 
 We used semaphores to manage the communication between different threads. Upon a student's arrival, a semaphore alerts the coordinator, and the request gets moved from the arrival queue to the priority queue. We use another semaphore to alert tutors when students become available to assist. The tutor selects the student with highest priority to serve next, which immediately makes their waiting chair available again, and alerts that student's personal semaphore of their assignment.
 
@@ -30,4 +30,3 @@ that was never filled. With 2 chairs, the coordinator ended up queuing an empty 
 the real student was never woken, so the program would hang. We couldn't tell when there was 1 chair, since 
 head always wraps back to 0, so ./csmc 10 1 1 3 passed but ./csmc 2 2 2 2 hung. We fixed it by assigning 
 the tail to be (arrival_head + arrival_count) % g_num_chairs instead.
-
