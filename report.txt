@@ -33,11 +33,11 @@ instead, on a tutor or student creation failure we still run the normal shutdown
 post coord_sem so the coordinator wakes every tutor, join all threads that were created, and then we destroy 
 the semaphores.
 
-A bug we ran into was in arrival_push. We originally wrote the new request at arrival_buf[arrival_count], 
+A bug we ran into was when a student adds itself to the arrival queue. We originally wrote the new request at arrival_buf[arrival_count], 
 which ignores where the head of the queue is. This only works while head is 0. After the coordinator pops 
 a request, head moves forward, so the next push lands in the wrong slot and the next pop reads a slot 
 that was never filled. With 2 chairs, the coordinator ended up queuing an empty request (student 0), and 
 the real student was never woken, so the program would hang. We couldn't tell when there was 1 chair, since 
 head always wraps back to 0, so ./csmc 10 1 1 3 passed but ./csmc 2 2 2 2 hung. We fixed it by assigning 
-the tail to be (arrival_head + arrival_count) % arrival_cap instead.
+the tail to be (arrival_head + arrival_count) % g_num_chairs instead.
 

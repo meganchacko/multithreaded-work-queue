@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <assert.h>
 
 typedef struct 
 {
@@ -49,21 +48,9 @@ static int g_num_help;
 static request_t *arrival_buf;
 static int arrival_head;
 static int arrival_count;
-static int arrival_cap;
 
 static request_t *pq_buf;
 static int pq_count;
-static int pq_cap;
-
-// queue helpers: caller must hold lock
-static void arrival_push(request_t r);
-static request_t arrival_pop(void);
-static bool arrival_empty(void);
-static void pq_insert(request_t r);
-static request_t pq_remove_best(void);
-static bool pq_empty(void);
-static int queues_alloc(int cap);
-static void queues_free(void);
 
 static void *coordinator_thread(void *arg);
 static void *tutor_thread(void *arg);
@@ -104,101 +91,6 @@ static int parse_positive_int(const char *text, int *result)
 }
 
 
-static void arrival_push(request_t r)
-{
-    assert(arrival_count < arrival_cap);
-
-    int tail = (arrival_head + arrival_count) % arrival_cap;
-    arrival_buf[tail] = r;
-    arrival_count++;
-}
-
-static request_t arrival_pop(void)
-{
-    assert(arrival_count > 0);
-
-    request_t r = arrival_buf[arrival_head];
-    arrival_head = (arrival_head + 1) % arrival_cap;
-    arrival_count--;
-
-    return r;
-}
-
-static bool arrival_empty(void)
-{
-    return arrival_count == 0;
-}
-
-static void pq_insert(request_t r)
-{
-    assert(pq_count < pq_cap);
-
-    pq_buf[pq_count] = r;
-    pq_count++;
-}
-
-static request_t pq_remove_best(void)
-{
-    assert(pq_count > 0);
-
-    int best = 0;
-
-    for (int i = 1; i < pq_count; i++) {
-        if (pq_buf[i].visit < pq_buf[best].visit ||
-            (pq_buf[i].visit == pq_buf[best].visit &&
-             pq_buf[i].seq < pq_buf[best].seq)) {
-            best = i;
-        }
-    }
-
-    request_t r = pq_buf[best];
-
-    for (int i = best; i < pq_count - 1; i++) {
-        pq_buf[i] = pq_buf[i + 1];
-    }
-
-    pq_count--;
-
-    return r;
-}
-
-static bool pq_empty(void)
-{
-    return pq_count == 0;
-}
-
-static int queues_alloc(int cap)
-{
-    arrival_buf = calloc((size_t)cap, sizeof(*arrival_buf));
-    pq_buf = calloc((size_t)cap, sizeof(*pq_buf));
-
-    if (arrival_buf == NULL || pq_buf == NULL) {
-        free(arrival_buf);
-        free(pq_buf);
-        arrival_buf = NULL;
-        pq_buf = NULL;
-        return -1;
-    }
-
-    arrival_cap = cap;
-    arrival_head = 0;
-    arrival_count = 0;
-
-    pq_cap = cap;
-    pq_count = 0;
-
-    return 0;
-}
-
-static void queues_free(void)
-{
-    free(arrival_buf);
-    free(pq_buf);
-
-    arrival_buf = NULL;
-    pq_buf = NULL;
-}
-
 static void *coordinator_thread(void *arg)
 {
     (void)arg;
@@ -210,7 +102,7 @@ static void *coordinator_thread(void *arg)
 
         // every student is joined before the shutdown post, so an empty
         // fifo here means we're done; wake every tutor so they can exit
-        if (shutting_down && arrival_empty()) {
+        if (shutting_down && arrival_count == 0) {
             Pthread_mutex_unlock(&lock);
 
             for (int i = 0; i < g_num_tutors; i++) {
@@ -220,10 +112,13 @@ static void *coordinator_thread(void *arg)
             break;
         }
 
-        if (!arrival_empty()) {
-            request_t r = arrival_pop();
+        if (arrival_count > 0) {
+            request_t r = arrival_buf[arrival_head];
+            arrival_head = (arrival_head + 1) % g_num_chairs;
+            arrival_count--;
 
-            pq_insert(r);
+            pq_buf[pq_count] = r;
+            pq_count++;
 
             log_event(LOG_QUEUED, r.student_id, -1, r.visit);
 
@@ -247,17 +142,31 @@ static void *tutor_thread(void *arg)
 
         Pthread_mutex_lock(&lock);
 
-        if (shutting_down && pq_empty()) {
+        if (shutting_down && pq_count == 0) {
             Pthread_mutex_unlock(&lock);
             break;
         }
 
-        if (pq_empty()) {
+        if (pq_count == 0) {
             Pthread_mutex_unlock(&lock);
             continue;
         }
 
-        request_t r = pq_remove_best();
+        // lowest visit number wins; ties go to whoever sat down first
+        int best = 0;
+        for (int i = 1; i < pq_count; i++) {
+            if (pq_buf[i].visit < pq_buf[best].visit ||
+                (pq_buf[i].visit == pq_buf[best].visit &&
+                 pq_buf[i].seq < pq_buf[best].seq)) {
+                best = i;
+            }
+        }
+
+        request_t r = pq_buf[best];
+        for (int i = best; i < pq_count - 1; i++) {
+            pq_buf[i] = pq_buf[i + 1];
+        }
+        pq_count--;
 
         // free the chair as soon as we pick the student, not after
         // tutoring, so another student can sit down in the meantime
@@ -326,7 +235,8 @@ static void *student_thread(void *arg)
         free_chairs--;
         request_t r = {s->id, visit, next_seq++};
         log_event(LOG_SEATED, s->id, -1, visit);
-        arrival_push(r);
+        arrival_buf[(arrival_head + arrival_count) % g_num_chairs] = r;
+        arrival_count++;
         Pthread_mutex_unlock(&lock);
         sem_post(&coord_sem);
 
@@ -359,14 +269,11 @@ static int run_simulation(int num_students, int num_tutors,
     tutor_ids = calloc(num_tutors, sizeof(*tutor_ids));
     sthreads = calloc(num_students, sizeof(*sthreads));
     tthreads = calloc(num_tutors, sizeof(*tthreads));
-    if (!students || !tutor_ids || !sthreads || !tthreads) 
+    arrival_buf = calloc(num_chairs, sizeof(*arrival_buf));
+    pq_buf = calloc(num_chairs, sizeof(*pq_buf));
+    if (!students || !tutor_ids || !sthreads || !tthreads || !arrival_buf || !pq_buf)
     {
         perror("calloc");
-        goto free_arrays;
-    }
-    if (queues_alloc(num_chairs) != 0) 
-    {
-        fprintf(stderr, "queues_alloc failed\n");
         goto free_arrays;
     }
 
@@ -408,6 +315,9 @@ static int run_simulation(int num_students, int num_tutors,
     free_chairs = num_chairs;
     next_seq = 0;
     shutting_down = false;
+    arrival_head = 0;
+    arrival_count = 0;
+    pq_count = 0;
 
     pthread_t coord;
     int nt = 0, ns = 0;
@@ -489,12 +399,13 @@ destroy_lock:
 
     }
 
-    queues_free();
 free_arrays:
     free(students);
     free(tutor_ids);
     free(sthreads);
     free(tthreads);
+    free(arrival_buf);
+    free(pq_buf);
     return ret;
 }
 
