@@ -1,15 +1,43 @@
 Additional Test Configurations
 1: ./csmc 7 3 2 4
-    The purpose of this test is to see what happens when multiple tutors have to compete for requests with the waiting-room capacity being limited. What we observed is all 28 tutoring sessions completed successfully and there were no unsuccessful chair attempts.
+    The purpose of this test is to see what happens when multiple tutors have to compete for requests
+    with the waiting-room capacity being limited. What we observed is all 28 tutoring sessions
+    completed successfully and there were no unsuccessful chair attempts.
 
 2: ./csmc 25 2 1 6
-    The purpose of this test is to see how our program performs when there is a lot of contention with there being only one waiting chair available and repeated visits to the tutoring center. What we observed is that all the 150 sessions completed successfully, and there were 50 total unsuccessful chair attempts which tells us that the student retried when the waiting area was full.
+    The purpose of this test is to see how our program performs when there is a lot of contention with 
+    there being only one waiting chair available and repeated visits to the tutoring center. What we 
+    observed is that all the 150 sessions completed successfully, and there were 50 total unsuccessful 
+    chair attempts which tells us that the student retried when the waiting area was full.
 
 3: ./csmc 40 50 3 2
-    The purpose of this test is to observe a configuration where there are more tutors than there are students and to verify that idle tutor threads terminate. We observed that all 80 expected sessions completed successfully, and there were 0 unsuccessful chair attempts. The program terminated successfully.
+    The purpose of this test is to observe a configuration where there are more tutors than there are 
+    students and to verify that idle tutor threads terminate. We observed that all 80 expected sessions 
+    completed successfully, and there were 0 unsuccessful chair attempts. The program terminated successfully.
 
-Synchronization Design
-For our program we designed a shared mutex to protect the arrival and priority queues, the shutdown state, and chair availability. With the arrival queue, it follows FIFO order, and with the priority queue the program selects students according to their visit number, allowing the arrival order to break any ties. A semaphore is used to allow the coordinator to wait on student arrivals and the coordinator transfers accepted requests into the priority queue. A separate semaphore is used to make tutors wait for available requests, select the student with the highest priority, free the waiting chair, and signal the selected student's personal semaphore. We coordinated shutdown after all student threads finish, which allows a clean exit for coordinators and tutors. 
+Synchronization Design:
+For our program we created a shared mutex so that the arrival and priority queues, the shutdown state, 
+and chair availability were all maintained properly. With the arrival queue, it follows FIFO order, and 
+with the priority queue the program selects students based on their visit number, so that we can rely 
+on the arrival order to fix any ties. We used a semaphore so that the coordinator can wait on student 
+arrivals and the coordinator transfers can accept requests into the priority queue. We used another 
+semaphore to make tutors wait for available requests, select the student with the highest priority, free 
+the waiting chair, and then signal the selected student's personal semaphore. We coordinated shutdown 
+after all student threads finish, which allows a clean exit for coordinators and tutors. 
 
-Bugs and Corrections
-TBD
+Bugs and Corrections:
+A correction we had to make was making sure that, even when we encounter an error (like a tutor not 
+starting), that we aren't immediately jumping to resolve the error by destroying the semaphores. If 
+we did this, it would cause a crash since the other tutors would still be waiting within sem_wait. So 
+instead, on a tutor or student creation failure we still run the normal shutdown where we set shutting_down, 
+post coord_sem so the coordinator wakes every tutor, join all threads that were created, and then we destroy 
+the semaphores.
+
+A bug we ran into was in arrival_push. We originally wrote the new request at arrival_buf[arrival_count], 
+which ignores where the head of the queue is. This only works while head is 0. After the coordinator pops 
+a request, head moves forward, so the next push lands in the wrong slot and the next pop reads a slot 
+that was never filled. With 2 chairs, the coordinator ended up queuing an empty request (student 0), and 
+the real student was never woken, so the program would hang. We couldn't tell when there was 1 chair, since 
+head always wraps back to 0, so ./csmc 10 1 1 3 passed but ./csmc 2 2 2 2 hung. We fixed it by assigning 
+the tail to be (arrival_head + arrival_count) % arrival_cap instead.
+
