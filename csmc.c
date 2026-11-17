@@ -11,13 +11,15 @@
 #include <time.h>
 #include <assert.h>
 
-typedef struct {
+typedef struct 
+{
     int student_id;
     int visit;
     unsigned long seq;
 } request_t;
 
-typedef struct {
+typedef struct 
+{
     int id;
     int visits_done;
     int assigned_tutor;
@@ -71,15 +73,17 @@ static void sleep_us(long us);
 
 static void *student_thread(void *arg);
 
-/* Accepts decimal digits only, yielding an integer in [1, INT_MAX]. */
+// accepts decimal digits only, yielding an integer in [1, INT_MAX]. 
 static int parse_positive_int(const char *text, int *result)
 {
-    if (text == NULL || *text == '\0') {
+    if (text == NULL || *text == '\0') 
+    {
         return -1;
     }
 
     int value = 0;
-    for (const unsigned char *p = (const unsigned char *)text; *p; ++p) {
+    for (const unsigned char *p = (const unsigned char *)text; *p; ++p) 
+    {
         if (*p < '0' || *p > '9') {
             return -1;
         }
@@ -89,7 +93,10 @@ static int parse_positive_int(const char *text, int *result)
         }
         value = value * 10 + digit;
     }
-    if (value == 0) {
+
+
+    if (value == 0) 
+    {
         return -1;
     }
     *result = value;
@@ -201,7 +208,8 @@ static void *coordinator_thread(void *arg)
 
         Pthread_mutex_lock(&lock);
 
-        // the fifo is only empty here on the shutdown post; pass it on to every tutor
+        // every student is joined before the shutdown post, so an empty
+        // fifo here means we're done; wake every tutor so they can exit
         if (shutting_down && arrival_empty()) {
             Pthread_mutex_unlock(&lock);
 
@@ -251,12 +259,14 @@ static void *tutor_thread(void *arg)
 
         request_t r = pq_remove_best();
 
-        // the chair frees when the student is picked, not after tutoring
+        // free the chair as soon as we pick the student, not after
+        // tutoring, so another student can sit down in the meantime
         free_chairs++;
 
         students[r.student_id - 1].assigned_tutor = tutor_id;
 
-        // ASSIGNED is logged under the lock, before the student is woken
+        // log ASSIGNED under the lock and before posting wake, so it
+        // always shows up in the log before the student's STUDENT_DONE
         log_event(LOG_ASSIGNED, r.student_id, tutor_id, r.visit);
 
         Pthread_mutex_unlock(&lock);
@@ -297,14 +307,16 @@ static void *student_thread(void *arg)
 {
     student_t *s = arg;
 
-    while (s->visits_done < g_num_help) {
+    while (s->visits_done < g_num_help) 
+    {
         int visit = s->visits_done + 1;
 
         // programming: a whole number of ms in [2, 10]
         sleep_us((2 + rand_r(&s->seed) % 9) * 1000L);
 
         Pthread_mutex_lock(&lock);
-        if (free_chairs == 0) {
+        if (free_chairs == 0) 
+        {
             log_event(LOG_NO_CHAIR, s->id, -1, visit);
             Pthread_mutex_unlock(&lock);
             continue;
@@ -320,6 +332,7 @@ static void *student_thread(void *arg)
 
         // the tutor frees our chair when it picks us, so we don't touch
         // free_chairs here; assigned_tutor is set before wake is posted
+
         Sem_wait(&s->wake);
         int tutor = s->assigned_tutor;
 
@@ -346,21 +359,26 @@ static int run_simulation(int num_students, int num_tutors,
     tutor_ids = calloc(num_tutors, sizeof(*tutor_ids));
     sthreads = calloc(num_students, sizeof(*sthreads));
     tthreads = calloc(num_tutors, sizeof(*tthreads));
-    if (!students || !tutor_ids || !sthreads || !tthreads) {
+    if (!students || !tutor_ids || !sthreads || !tthreads) 
+    {
         perror("calloc");
         goto free_arrays;
     }
-    if (queues_alloc(num_chairs) != 0) {
+    if (queues_alloc(num_chairs) != 0) 
+    {
         fprintf(stderr, "queues_alloc failed\n");
         goto free_arrays;
     }
 
     Pthread_mutex_init(&lock, NULL);
-    if (sem_init(&coord_sem, 0, 0) != 0) {
+    if (sem_init(&coord_sem, 0, 0) != 0) 
+    {
         perror("sem_init");
         goto destroy_lock;
     }
-    if (sem_init(&tutor_sem, 0, 0) != 0) {
+
+    if (sem_init(&tutor_sem, 0, 0) != 0) 
+    {
         perror("sem_init");
         goto destroy_coord;
     }
@@ -368,16 +386,22 @@ static int run_simulation(int num_students, int num_tutors,
     unsigned int now = (unsigned int)time(NULL);
 
     // nwake counts the wake semaphores created, so we only destroy those
-    for (nwake = 0; nwake < num_students; nwake++) {
+
+
+    for (nwake = 0; nwake < num_students; nwake++) 
+    {
         students[nwake].id = nwake + 1;
         students[nwake].visits_done = 0;
         students[nwake].seed = now ^ ((unsigned int)(nwake + 1) * 2654435761u);
-        if (sem_init(&students[nwake].wake, 0, 0) != 0) {
+        if (sem_init(&students[nwake].wake, 0, 0) != 0) 
+        {
             perror("sem_init");
             goto destroy_wakes;
         }
     }
-    for (int i = 0; i < num_tutors; i++) {
+
+    for (int i = 0; i < num_tutors; i++) 
+    {
         tutor_ids[i] = i + 1;
     }
 
@@ -388,31 +412,40 @@ static int run_simulation(int num_students, int num_tutors,
     pthread_t coord;
     int nt = 0, ns = 0;
 
-    if (pthread_create(&coord, NULL, coordinator_thread, NULL) != 0) {
+    if (pthread_create(&coord, NULL, coordinator_thread, NULL) != 0) 
+    {
         fprintf(stderr, "pthread_create failed for coordinator\n");
         goto destroy_wakes;
     }
+
     for (nt = 0; nt < num_tutors; nt++) {
-        if (pthread_create(&tthreads[nt], NULL, tutor_thread, &tutor_ids[nt]) != 0) {
+        if (pthread_create(&tthreads[nt], NULL, tutor_thread, &tutor_ids[nt]) != 0) 
+        {
             fprintf(stderr, "pthread_create failed for tutor %d\n", nt + 1);
             break;
         }
     }
     // only start students once every tutor is running
-    if (nt == num_tutors) {
-        for (ns = 0; ns < num_students; ns++) {
-            if (pthread_create(&sthreads[ns], NULL, student_thread, &students[ns]) != 0) {
+    if (nt == num_tutors) 
+    {
+        for (ns = 0; ns < num_students; ns++) 
+        {
+            if (pthread_create(&sthreads[ns], NULL, student_thread, &students[ns]) != 0) 
+            {
                 fprintf(stderr, "pthread_create failed for student %d\n", ns + 1);
+
                 break;
             }
         }
     }
-    if (nt == num_tutors && ns == num_students) {
+    if (nt == num_tutors && ns == num_students) 
+    {
         ret = 0;
     }
 
     // if a tutor or student failed to start, this still shuts down the ones that did
-    for (int i = 0; i < ns; i++) {
+    for (int i = 0; i < ns; i++) 
+    {
         Pthread_join(sthreads[i], NULL);
     }
     // students are done, so both queues are empty; one post lets the
@@ -422,32 +455,40 @@ static int run_simulation(int num_students, int num_tutors,
     Pthread_mutex_unlock(&lock);
     sem_post(&coord_sem);
     Pthread_join(coord, NULL);
-    for (int i = 0; i < nt; i++) {
+
+    for (int i = 0; i < nt; i++) 
+    {
         Pthread_join(tthreads[i], NULL);
     }
 
     // a failed destroy makes the run fail, but we keep cleaning up the rest
 destroy_wakes:
-    for (int i = 0; i < nwake; i++) {
+    for (int i = 0; i < nwake; i++) 
+    {
         if (sem_destroy(&students[i].wake) != 0) {
             perror("sem_destroy");
             ret = -1;
         }
     }
-    if (sem_destroy(&tutor_sem) != 0) {
+    if (sem_destroy(&tutor_sem) != 0) 
+    {
         perror("sem_destroy");
         ret = -1;
     }
 destroy_coord:
-    if (sem_destroy(&coord_sem) != 0) {
+    if (sem_destroy(&coord_sem) != 0) 
+    {
         perror("sem_destroy");
         ret = -1;
     }
 destroy_lock:
-    if (pthread_mutex_destroy(&lock) != 0) {
+    if (pthread_mutex_destroy(&lock) != 0) 
+    {
         fprintf(stderr, "pthread_mutex_destroy failed\n");
         ret = -1;
+
     }
+
     queues_free();
 free_arrays:
     free(students);
@@ -465,7 +506,8 @@ int main(int argc, char *argv[])
         parse_positive_int(argc > 1 ? argv[1] : NULL, &num_students) != 0 ||
         parse_positive_int(argc > 2 ? argv[2] : NULL, &num_tutors) != 0 ||
         parse_positive_int(argc > 3 ? argv[3] : NULL, &num_chairs) != 0 ||
-        parse_positive_int(argc > 4 ? argv[4] : NULL, &num_help) != 0) {
+        parse_positive_int(argc > 4 ? argv[4] : NULL, &num_help) != 0) 
+        {
         fprintf(stderr,
                 "Usage: %s <students> <tutors> <chairs> <help>\n"
                 "All four arguments must be positive integers.\n",
@@ -473,17 +515,18 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    if (init_log(num_students, num_help) != 0) {
+    if (init_log(num_students, num_help) != 0) 
+    {
         perror("init_log");
         return EXIT_FAILURE;
     }
 
-    if (run_simulation(num_students, num_tutors, num_chairs, num_help) != 0) {
+    if (run_simulation(num_students, num_tutors, num_chairs, num_help) != 0) 
+    {
         destroy_log();
         return EXIT_FAILURE;
     }
 
-    /* Do not call until student, tutor, and coordinator threads are joined. */
     print_log();
     destroy_log();
     return EXIT_SUCCESS;

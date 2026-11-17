@@ -20,7 +20,7 @@ For our program we created a shared mutex so that the arrival and priority queue
 and chair availability were all maintained properly. With the arrival queue, it follows FIFO order, and 
 with the priority queue the program selects students based on their visit number, so that we can rely 
 on the arrival order to fix any ties. We used a semaphore so that the coordinator can wait on student 
-arrivals and the coordinator transfers can accept requests into the priority queue. We used another 
+arrivals and the coordinator transfers accepted requests into the priority queue. We used another 
 semaphore to make tutors wait for available requests, select the student with the highest priority, free 
 the waiting chair, and then signal the selected student's personal semaphore. We coordinated shutdown 
 after all student threads finish, which allows a clean exit for coordinators and tutors. 
